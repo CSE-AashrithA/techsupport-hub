@@ -1,0 +1,12 @@
+{
+  "name": "techsupport-hub",
+  "private": true,
+  "description": "Internal IT help desk: employees report issues, the IT team manages and resolves them.",
+  "workspaces": [
+    "server"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev -w server",
+    "test": "npm test -w server"
+  }
+}
