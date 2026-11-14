@@ -1,3 +1,5 @@
+import ApiStatus from "./components/ApiStatus";
+
 export default function App() {
   return (
     <div className="min-h-screen">
@@ -9,6 +11,7 @@ export default function App() {
             </span>
             <span className="font-semibold">TechSupport Hub</span>
           </div>
+          <ApiStatus />
         </div>
       </header>
 
