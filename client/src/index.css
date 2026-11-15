@@ -1,5 +1,59 @@
 @import "tailwindcss";
 
+/* "Midnight Ops" design tokens */
+@theme {
+  /* backgrounds, darkest to lightest */
+  --color-ink-950: #070b14;
+  --color-ink-900: #0b1220;
+  --color-ink-800: #131b2e;
+  --color-ink-700: #1d2740;
+  --color-ink-600: #2a3654;
+
+  /* text */
+  --color-cream: #ece8df;
+  --color-mist: #9aa3b5;
+
+  /* the one accent color, used for main actions and urgent things */
+  --color-signal: #ff5a1f;
+  --color-signal-soft: #ff8a5b;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Tight Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Oswald Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-ink-900 font-sans text-cream antialiased;
+  /* soft glow at the top of the page */
+  background-image: radial-gradient(
+    ellipse 80% 50% at 50% -10%,
+    color-mix(in oklab, var(--color-ink-600) 70%, transparent),
+    transparent
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* faint starfield behind everything */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, white, transparent),
+    radial-gradient(1px 1px at 27% 72%, white, transparent),
+    radial-gradient(1.5px 1.5px at 44% 34%, white, transparent),
+    radial-gradient(1px 1px at 63% 12%, white, transparent),
+    radial-gradient(1px 1px at 78% 58%, white, transparent),
+    radial-gradient(1.5px 1.5px at 88% 26%, white, transparent),
+    radial-gradient(1px 1px at 92% 84%, white, transparent),
+    radial-gradient(1px 1px at 6% 90%, white, transparent);
+}
+
+/* small uppercase label with wide spacing, e.g. "IT SUPPORT · LIVE" */
+@utility eyebrow {
+  @apply font-label text-xs font-medium tracking-[0.25em] uppercase;
 }
