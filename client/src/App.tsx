@@ -3,30 +3,45 @@ import ApiStatus from "./components/ApiStatus";
 export default function App() {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-md bg-slate-900 text-sm font-bold text-white">
-              TS
-            </span>
-            <span className="font-semibold">TechSupport Hub</span>
+      <header className="border-b border-white/5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <div className="flex items-center gap-3">
+            <span
+              className="size-2.5 rotate-45 bg-signal shadow-[0_0_14px] shadow-signal"
+              aria-hidden="true"
+            />
+            <span className="eyebrow text-sm text-cream">TechSupport Hub</span>
           </div>
           <ApiStatus />
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <h1 className="text-2xl font-semibold">Your tickets</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Report IT problems and follow them until they're fixed.
+      <main className="mx-auto max-w-6xl px-6 pt-16 pb-24 sm:pt-24">
+        <span className="eyebrow inline-block rounded-full bg-signal px-3 py-1.5 text-ink-950">
+          IT Support · Help desk
+        </span>
+
+        <h1 className="mt-6 font-display text-6xl leading-[0.9] font-bold tracking-tight uppercase sm:text-8xl lg:text-9xl">
+          Your
+          <br />
+          tickets<span className="text-signal">.</span>
+        </h1>
+
+        <p className="mt-6 max-w-xl text-lg text-mist">
+          Report an IT problem in seconds and follow it until it's fixed. No email chains, no
+          guessing who's on it.
         </p>
 
-        <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center">
-          <p className="font-medium">No tickets yet</p>
-          <p className="mt-1 text-sm text-slate-500">
-            When you report an issue, it will show up here with its status.
+        <section
+          aria-label="Your tickets"
+          className="mt-14 rounded-2xl border border-white/10 bg-ink-800/60 p-10 backdrop-blur sm:p-14"
+        >
+          <p className="eyebrow text-mist">Queue · 0 open</p>
+          <p className="mt-3 font-display text-2xl font-semibold">Nothing in your queue.</p>
+          <p className="mt-2 max-w-md text-mist">
+            When you report an issue it lands here, with its status and who's working on it.
           </p>
-        </div>
+        </section>
       </main>
     </div>
   );

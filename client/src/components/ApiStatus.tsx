@@ -3,14 +3,19 @@ import { useEffect, useState } from "react";
 type Status = "checking" | "online" | "offline";
 
 const styles: Record<Status, { dot: string; label: string }> = {
-  checking: { dot: "bg-slate-400", label: "Checking API…" },
-  online: { dot: "bg-green-500", label: "API online" },
-  offline: { dot: "bg-red-500", label: "API offline" },
+  checking: { dot: "bg-mist", label: "Connecting" },
+  online: { dot: "bg-emerald-400 shadow-[0_0_8px] shadow-emerald-400", label: "IT desk online" },
+  offline: { dot: "bg-signal shadow-[0_0_8px] shadow-signal", label: "IT desk offline" },
 };
 
-// small badge in the header that pings /api/health every 30 seconds
+function formatTime(date: Date) {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+// header pill: live clock + whether the api answers /api/health
 export default function ApiStatus() {
   const [status, setStatus] = useState<Status>("checking");
+  const [time, setTime] = useState(() => formatTime(new Date()));
 
   useEffect(() => {
     let cancelled = false;
@@ -25,10 +30,12 @@ export default function ApiStatus() {
     }
 
     check();
-    const timer = setInterval(check, 30_000);
+    const healthTimer = setInterval(check, 30_000);
+    const clockTimer = setInterval(() => setTime(formatTime(new Date())), 10_000);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      clearInterval(healthTimer);
+      clearInterval(clockTimer);
     };
   }, []);
 
@@ -37,9 +44,11 @@ export default function ApiStatus() {
   return (
     <span
       role="status"
-      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600"
+      className="eyebrow inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-mist backdrop-blur"
     >
-      <span className={`size-2 rounded-full ${dot}`} aria-hidden="true" />
+      <span className={`size-1.5 rounded-full ${dot}`} aria-hidden="true" />
+      <span className="text-cream tabular-nums">{time}</span>
+      <span aria-hidden="true">·</span>
       {label}
     </span>
   );
