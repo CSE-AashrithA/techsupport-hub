@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // sample numbers for now, these get replaced with real stats once tickets live in the database
 const stats = [
@@ -17,6 +17,23 @@ const recent = [
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// keeps track of an element's width so the chart can be drawn at its real size
+// (otherwise the svg keeps its shape and leaves gaps on the sides)
+function useWidth<T extends HTMLElement>(fallback: number) {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(fallback);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, width] as const;
 }
 
 // counts from 0 up to the target when the component first shows up
@@ -57,17 +74,20 @@ function Stat({ label, value, decimals, suffix, accent }: (typeof stats)[number]
   );
 }
 
-// turns the daily numbers into svg coordinates inside a 300x90 box
-function chartPoints(values: number[], width = 300, height = 90, pad = 6) {
+const CHART_HEIGHT = 90;
+
+// turns the daily numbers into svg coordinates inside a width x 90 box
+function chartPoints(values: number[], width: number, height = CHART_HEIGHT, pad = 6) {
   const max = Math.max(...values);
   const step = width / (values.length - 1);
   return values.map((v, i) => [i * step, height - pad - (v / max) * (height - pad * 2)] as const);
 }
 
 export default function DeskPulse() {
-  const points = chartPoints(resolvedPerDay);
+  const [chartRef, chartWidth] = useWidth<HTMLDivElement>(300);
+  const points = chartPoints(resolvedPerDay, chartWidth);
   const line = points.map(([x, y]) => `${x},${y}`).join(" ");
-  const area = `0,90 ${line} 300,90`;
+  const area = `0,${CHART_HEIGHT} ${line} ${chartWidth},${CHART_HEIGHT}`;
   const [lastX, lastY] = points[points.length - 1];
 
   return (
@@ -98,7 +118,8 @@ export default function DeskPulse() {
           <p className="text-sm font-medium text-emerald-300">↑ 18%</p>
         </div>
 
-        <svg viewBox="0 0 300 90" className="mt-3 h-24 w-full overflow-visible" role="img"
+        <div ref={chartRef} className="mt-3">
+        <svg viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`} height={CHART_HEIGHT} className="block w-full overflow-visible" role="img"
           aria-label="Tickets resolved per day this week, rising from 4 on Monday to 14 on Sunday"
         >
           <defs>
@@ -122,6 +143,7 @@ export default function DeskPulse() {
             className="motion-safe:animate-rise [animation-delay:1.9s]"
           />
         </svg>
+        </div>
 
         <div className="mt-2 flex justify-between text-[10px] text-mist/70">
           {days.map((d, i) => (
