@@ -1,4 +1,5 @@
 import ApiStatus from "./components/ApiStatus";
+import DeskPulse from "./components/DeskPulse";
 
 export default function App() {
   return (
@@ -17,20 +18,28 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 pt-16 pb-24 sm:pt-24">
-        <span className="eyebrow inline-block rounded-full bg-signal motion-safe:animate-rise px-3 py-1.5 text-ink-950">
-          IT Support · Help desk
-        </span>
+        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <span className="eyebrow inline-block rounded-full bg-signal motion-safe:animate-rise px-3 py-1.5 text-ink-950">
+              IT Support · Help desk
+            </span>
 
-        <h1 className="mt-6 motion-safe:animate-rise [animation-delay:90ms] font-display text-6xl leading-[0.9] font-bold tracking-tight uppercase sm:text-8xl lg:text-9xl">
-          Your
-          <br />
-          tickets<span className="text-signal">.</span>
-        </h1>
+            <h1 className="mt-6 motion-safe:animate-rise [animation-delay:90ms] font-display text-6xl leading-[0.9] font-bold tracking-tight uppercase sm:text-8xl">
+              Your
+              <br />
+              tickets<span className="text-signal">.</span>
+            </h1>
 
-        <p className="mt-6 max-w-xl text-lg text-mist motion-safe:animate-rise [animation-delay:180ms]">
-          Report an IT problem in seconds and follow it until it's fixed. No email chains, no
-          guessing who's on it.
-        </p>
+            <p className="mt-6 max-w-xl text-lg text-mist motion-safe:animate-rise [animation-delay:180ms]">
+              Report an IT problem in seconds and follow it until it's fixed. No email chains, no
+              guessing who's on it.
+            </p>
+          </div>
+
+          <div className="motion-safe:animate-rise [animation-delay:240ms]">
+            <DeskPulse />
+          </div>
+        </div>
 
         <section
           aria-label="Your tickets"
