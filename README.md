@@ -40,4 +40,35 @@ A full-stack internal help desk. Employees report IT issues, and the IT support 
 - [ ] **3. Admin dashboard:** roles, assigning technicians, managing all tickets and users
 - [ ] **4. Asset management:** devices, owners, condition and assignment history
 
-Setup instructions will be added as each part of the app lands.
+## Project structure
+
+```
+client/        React front end (Vite, TypeScript, Tailwind)
+  src/
+    components/  reusable pieces like the API status pill and dashboard panel
+server/        Express API (TypeScript)
+  src/         the app and its routes
+  tests/       API tests (Vitest + Supertest)
+  db/          database schema and demo data
+```
+
+## Running it locally
+
+You'll need [Node.js](https://nodejs.org) 20 or newer.
+
+```bash
+# install everything for both the client and the server
+npm install
+
+# run the API tests
+npm test
+
+# start the API on http://localhost:4000
+npm run dev:server
+
+# in a second terminal, start the front end on http://localhost:5173
+npm run dev:client
+```
+
+The front end sends `/api` requests to the server automatically while developing, so run both.
+Database setup steps will be added once the API is connected to PostgreSQL.
