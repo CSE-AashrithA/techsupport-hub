@@ -1,5 +1,6 @@
 import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
+import { databaseIsUp } from "./db.js";
 
 /**
  * Builds the Express app without starting it, so tests can send
@@ -12,8 +13,8 @@ export function createApp() {
   app.use(express.json());
 
   // Lets hosting platforms (and us) check that the API is up.
-  app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok" });
+  app.get("/api/health", async (_req, res) => {
+    res.json({ status: "ok", database: (await databaseIsUp()) ? "up" : "down" });
   });
 
   app.use((_req, res) => {
