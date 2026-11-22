@@ -1,5 +1,9 @@
 import pg from "pg";
 
+// ids are bigint in the database, which pg returns as strings by default.
+// ours will never get near 9 quadrillion, so plain numbers are safe and nicer to use.
+pg.types.setTypeParser(pg.types.builtins.INT8, (value) => Number(value));
+
 // one shared pool of connections for the whole api.
 // it only connects when the first query runs, so tests can load the app without a database.
 export const pool = new pg.Pool({
