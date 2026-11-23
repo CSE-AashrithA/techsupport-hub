@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db.js";
-import { validateNewTicket } from "../validation.js";
+import { parseTicketFilters, validateNewTicket } from "../validation.js";
 
 export const ticketsRouter = Router();
 
@@ -19,6 +19,28 @@ async function demoEmployeeId() {
   if (!rows[0]) throw new Error("demo employee is missing. run: npm run db:setup -w server");
   return rows[0].id;
 }
+
+// GET /api/tickets?status=open&priority=urgent  (both filters are optional)
+ticketsRouter.get("/", async (req, res) => {
+  const filters = parseTicketFilters(req.query);
+  if (!filters.ok) {
+    res.status(400).json({ error: "Unknown filter", fields: filters.errors });
+    return;
+  }
+
+  const { rows } = await pool.query(
+    `select ${TICKET_FIELDS}
+     from tickets t
+     join users r on r.id = t.requester_id
+     left join users a on a.id = t.assignee_id
+     where ($1::text is null or t.status = $1)
+       and ($2::text is null or t.priority = $2)
+     order by t.created_at desc, t.id desc`,
+    [filters.value.status, filters.value.priority],
+  );
+
+  res.json(rows);
+});
 
 // POST /api/tickets  { title, description, category, priority? }
 ticketsRouter.post("/", async (req, res) => {

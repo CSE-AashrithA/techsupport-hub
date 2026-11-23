@@ -85,3 +85,46 @@ describe("POST /api/tickets", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("GET /api/tickets", () => {
+  it("lists tickets with the newest first", async () => {
+    const first = await request(app)
+      .post("/api/tickets")
+      .send({ ...goodTicket, title: "Older ticket" });
+    const second = await request(app)
+      .post("/api/tickets")
+      .send({ ...goodTicket, title: "Newer ticket" });
+
+    const res = await request(app).get("/api/tickets");
+    const ids = res.body.map((t: { id: number }) => t.id);
+
+    expect(res.status).toBe(200);
+    expect(ids.indexOf(second.body.id)).toBeLessThan(ids.indexOf(first.body.id));
+  });
+
+  it("can show only urgent tickets", async () => {
+    const urgent = await request(app)
+      .post("/api/tickets")
+      .send({ ...goodTicket, priority: "urgent" });
+
+    const res = await request(app).get("/api/tickets?priority=urgent");
+
+    expect(res.status).toBe(200);
+    expect(res.body.map((t: { id: number }) => t.id)).toContain(urgent.body.id);
+    expect(res.body.every((t: { priority: string }) => t.priority === "urgent")).toBe(true);
+  });
+
+  it("can filter by status", async () => {
+    const res = await request(app).get("/api/tickets?status=resolved");
+
+    expect(res.status).toBe(200);
+    expect(res.body.every((t: { status: string }) => t.status === "resolved")).toBe(true);
+  });
+
+  it("rejects a status that doesn't exist", async () => {
+    const res = await request(app).get("/api/tickets?status=lost");
+
+    expect(res.status).toBe(400);
+    expect(res.body.fields.status).toBeDefined();
+  });
+});

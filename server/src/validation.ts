@@ -4,6 +4,7 @@ export const STATUSES = ["open", "in_progress", "resolved", "closed"] as const;
 
 export type Category = (typeof CATEGORIES)[number];
 export type Priority = (typeof PRIORITIES)[number];
+export type Status = (typeof STATUSES)[number];
 
 export interface NewTicket {
   title: string;
@@ -46,4 +47,26 @@ export function validateNewTicket(body: unknown): Validation<NewTicket> {
     ok: true,
     value: { title, description, category: category as Category, priority: priority as Priority },
   };
+}
+
+export interface TicketFilters {
+  status: Status | null;
+  priority: Priority | null;
+}
+
+// reads ?status= and ?priority= from the url. leaving one out means "any".
+export function parseTicketFilters(query: Record<string, unknown>): Validation<TicketFilters> {
+  const errors: Record<string, string> = {};
+  const status = query.status ?? null;
+  const priority = query.priority ?? null;
+
+  if (status !== null && !isOneOf(status, STATUSES)) {
+    errors.status = `Pick one of: ${STATUSES.join(", ")}`;
+  }
+  if (priority !== null && !isOneOf(priority, PRIORITIES)) {
+    errors.priority = `Pick one of: ${PRIORITIES.join(", ")}`;
+  }
+
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+  return { ok: true, value: { status: status as Status | null, priority: priority as Priority | null } };
 }
