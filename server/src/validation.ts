@@ -70,3 +70,9 @@ export function parseTicketFilters(query: Record<string, unknown>): Validation<T
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return { ok: true, value: { status: status as Status | null, priority: priority as Priority | null } };
 }
+
+// ids in urls arrive as text, so check it's a real positive whole number
+export function parseId(value: unknown): number | null {
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}

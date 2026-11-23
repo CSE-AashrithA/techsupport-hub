@@ -128,3 +128,49 @@ describe("GET /api/tickets", () => {
     expect(res.body.fields.status).toBeDefined();
   });
 });
+
+describe("GET /api/tickets/:id", () => {
+  it("returns one ticket with its comments", async () => {
+    const created = await request(app).post("/api/tickets").send(goodTicket);
+
+    const res = await request(app).get(`/api/tickets/${created.body.id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: created.body.id,
+      title: goodTicket.title,
+      description: goodTicket.description,
+      comments: [],
+    });
+  });
+
+  it("includes comments, oldest first", async () => {
+    const created = await request(app).post("/api/tickets").send(goodTicket);
+    const { rows } = await pool.query("select id from users where role = 'admin' limit 1");
+    await pool.query(
+      `insert into ticket_comments (ticket_id, author_id, body)
+       values ($1, $2, 'looking into it'), ($1, $2, 'fixed the router')`,
+      [created.body.id, rows[0].id],
+    );
+
+    const res = await request(app).get(`/api/tickets/${created.body.id}`);
+
+    expect(res.body.comments.map((c: { body: string }) => c.body)).toEqual([
+      "looking into it",
+      "fixed the router",
+    ]);
+    expect(res.body.comments[0]).toMatchObject({ authorName: "Demo Admin", authorRole: "admin" });
+  });
+
+  it("returns 404 for a ticket that doesn't exist", async () => {
+    const res = await request(app).get("/api/tickets/999999");
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 when the id isn't a number", async () => {
+    const res = await request(app).get("/api/tickets/abc");
+
+    expect(res.status).toBe(400);
+  });
+});

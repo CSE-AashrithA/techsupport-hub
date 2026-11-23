@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db.js";
-import { parseTicketFilters, validateNewTicket } from "../validation.js";
+import { parseId, parseTicketFilters, validateNewTicket } from "../validation.js";
 
 export const ticketsRouter = Router();
 
@@ -40,6 +40,40 @@ ticketsRouter.get("/", async (req, res) => {
   );
 
   res.json(rows);
+});
+
+// GET /api/tickets/:id  (the ticket plus its comments, oldest comment first)
+ticketsRouter.get("/:id", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) {
+    res.status(400).json({ error: "Ticket id must be a positive number" });
+    return;
+  }
+
+  const ticket = await pool.query(
+    `select ${TICKET_FIELDS}
+     from tickets t
+     join users r on r.id = t.requester_id
+     left join users a on a.id = t.assignee_id
+     where t.id = $1`,
+    [id],
+  );
+  if (ticket.rows.length === 0) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+
+  const comments = await pool.query(
+    `select c.id, c.body, c.created_at as "createdAt",
+            u.name as "authorName", u.role as "authorRole"
+     from ticket_comments c
+     join users u on u.id = c.author_id
+     where c.ticket_id = $1
+     order by c.created_at, c.id`,
+    [id],
+  );
+
+  res.json({ ...ticket.rows[0], comments: comments.rows });
 });
 
 // POST /api/tickets  { title, description, category, priority? }
