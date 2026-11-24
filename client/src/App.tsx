@@ -1,5 +1,6 @@
 import ApiStatus from "./components/ApiStatus";
 import DeskPulse from "./components/DeskPulse";
+import TicketQueue from "./components/TicketQueue";
 
 export default function App() {
   return (
@@ -41,16 +42,9 @@ export default function App() {
           </div>
         </div>
 
-        <section
-          aria-label="Your tickets"
-          className="mt-14 motion-safe:animate-rise [animation-delay:300ms] rounded-2xl border border-white/10 bg-ink-800/60 p-10 backdrop-blur sm:p-14"
-        >
-          <p className="eyebrow text-mist">Queue · 0 open</p>
-          <p className="mt-3 font-display text-2xl font-semibold">Nothing in your queue.</p>
-          <p className="mt-2 max-w-md text-mist">
-            When you report an issue it lands here, with its status and who's working on it.
-          </p>
-        </section>
+        <div className="mt-14 motion-safe:animate-rise [animation-delay:300ms]">
+          <TicketQueue />
+        </div>
       </main>
     </div>
   );
