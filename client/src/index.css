@@ -36,6 +36,18 @@
     }
   }
 
+  /* a quick orange glow that fades out, for a ticket that was just created */
+  --animate-flash: flash 2.4s ease-out both;
+
+  @keyframes flash {
+    from {
+      background-color: color-mix(in oklab, var(--color-signal) 22%, transparent);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+
   @keyframes rise {
     from {
       opacity: 0;

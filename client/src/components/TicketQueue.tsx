@@ -36,18 +36,26 @@ type State =
   | { kind: "error"; message: string }
   | { kind: "ready"; tickets: Ticket[] };
 
-export default function TicketQueue() {
+interface TicketQueueProps {
+  // bump this number to reload the list (e.g. after a new ticket is created)
+  refreshKey?: number;
+  // this ticket gets a short glow so you can spot it
+  highlightId?: number | null;
+}
+
+export default function TicketQueue({ refreshKey = 0, highlightId = null }: TicketQueueProps) {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   const load = useCallback(() => {
-    setState({ kind: "loading" });
+    // only show the loading placeholders the first time, not on every refresh
+    setState((current) => (current.kind === "ready" ? current : { kind: "loading" }));
     api
       .listTickets()
       .then((tickets) => setState({ kind: "ready", tickets }))
       .catch((err: Error) => setState({ kind: "error", message: err.message }));
   }, []);
 
-  useEffect(load, [load]);
+  useEffect(load, [load, refreshKey]);
 
   const openCount =
     state.kind === "ready"
@@ -98,7 +106,9 @@ export default function TicketQueue() {
           {state.tickets.map((t) => (
             <li
               key={t.id}
-              className="group flex flex-wrap items-center gap-x-4 gap-y-2 py-4 transition first:pt-0 last:pb-0"
+              className={`group -mx-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-3 py-4 transition ${
+                t.id === highlightId ? "motion-safe:animate-flash" : ""
+              }`}
             >
               <span className="w-14 shrink-0 text-sm text-mist tabular-nums">#{t.id}</span>
               <div className="min-w-0 flex-1">

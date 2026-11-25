@@ -1,8 +1,23 @@
+import { useRef, useState } from "react";
 import ApiStatus from "./components/ApiStatus";
 import DeskPulse from "./components/DeskPulse";
+import ReportIssueDialog from "./components/ReportIssueDialog";
 import TicketQueue from "./components/TicketQueue";
+import type { Ticket } from "./types";
 
 export default function App() {
+  const [reportOpen, setReportOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [newTicketId, setNewTicketId] = useState<number | null>(null);
+  const queueRef = useRef<HTMLDivElement>(null);
+
+  function handleCreated(ticket: Ticket) {
+    setReportOpen(false);
+    setNewTicketId(ticket.id);
+    setRefreshKey((key) => key + 1);
+    queueRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-white/5">
@@ -35,6 +50,14 @@ export default function App() {
               Report an IT problem in seconds and follow it until it's fixed. No email chains, no
               guessing who's on it.
             </p>
+
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-signal px-6 py-3 font-semibold text-ink-950 shadow-[0_0_30px_-6px] shadow-signal transition hover:bg-signal-soft motion-safe:animate-rise [animation-delay:220ms]"
+            >
+              Report an issue <span aria-hidden="true">→</span>
+            </button>
           </div>
 
           <div className="motion-safe:animate-rise [animation-delay:240ms]">
@@ -42,10 +65,19 @@ export default function App() {
           </div>
         </div>
 
-        <div className="mt-14 motion-safe:animate-rise [animation-delay:300ms]">
-          <TicketQueue />
+        <div
+          ref={queueRef}
+          className="mt-14 scroll-mt-6 motion-safe:animate-rise [animation-delay:300ms]"
+        >
+          <TicketQueue refreshKey={refreshKey} highlightId={newTicketId} />
         </div>
       </main>
+
+      <ReportIssueDialog
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        onCreated={handleCreated}
+      />
     </div>
   );
 }
