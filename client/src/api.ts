@@ -1,4 +1,4 @@
-import type { Priority, Status, Ticket, TicketWithComments } from "./types";
+import type { NewTicket, Priority, Status, Ticket, TicketWithComments } from "./types";
 
 // empty while developing (vite forwards /api to the server). set VITE_API_URL when deployed.
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
@@ -42,5 +42,9 @@ export const api = {
 
   getTicket(id: number) {
     return request<TicketWithComments>(`/tickets/${id}`);
+  },
+
+  createTicket(ticket: NewTicket) {
+    return request<Ticket>("/tickets", { method: "POST", body: JSON.stringify(ticket) });
   },
 };

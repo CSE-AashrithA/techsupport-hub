@@ -22,6 +22,14 @@ export interface Ticket {
   assigneeName: string | null;
 }
 
+// what the "report an issue" form sends to the api
+export interface NewTicket {
+  title: string;
+  description: string;
+  category: Category;
+  priority: Priority;
+}
+
 export interface Comment {
   id: number;
   body: string;
