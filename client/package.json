@@ -12,7 +12,8 @@
     "@fontsource-variable/inter-tight": "^5.1.1",
     "@fontsource-variable/oswald": "^5.1.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router": "^8.5.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
