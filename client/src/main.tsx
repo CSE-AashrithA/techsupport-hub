@@ -7,6 +7,7 @@ import "@fontsource-variable/oswald";
 import App from "./App";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import TicketDetailPage from "./pages/TicketDetailPage";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
@@ -15,6 +16,7 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route element={<App />}>
           <Route index element={<HomePage />} />
+          <Route path="tickets/:id" element={<TicketDetailPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

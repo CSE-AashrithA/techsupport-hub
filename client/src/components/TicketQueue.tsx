@@ -1,35 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router";
 import { api } from "../api";
-import { label, type Priority, type Status, type Ticket } from "../types";
-
-const priorityStyle: Record<Priority, string> = {
-  urgent: "text-signal",
-  high: "text-amber-300",
-  medium: "text-sky-300",
-  low: "text-mist",
-};
-
-const statusStyle: Record<Status, string> = {
-  open: "border-sky-400/40 text-sky-200",
-  in_progress: "border-amber-300/40 text-amber-200",
-  resolved: "border-emerald-400/40 text-emerald-200",
-  closed: "border-white/15 text-mist",
-};
-
-// "3 minutes ago", "2 days ago"
-const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-function timeAgo(iso: string) {
-  const seconds = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
-  const steps: [Intl.RelativeTimeFormatUnit, number][] = [
-    ["day", 86400],
-    ["hour", 3600],
-    ["minute", 60],
-  ];
-  for (const [unit, size] of steps) {
-    if (Math.abs(seconds) >= size) return relative.format(Math.round(seconds / size), unit);
-  }
-  return "just now";
-}
+import { label, type Ticket } from "../types";
+import { PriorityLabel, StatusPill, timeAgo } from "./TicketBadges";
 
 type State =
   | { kind: "loading" }
@@ -104,30 +77,32 @@ export default function TicketQueue({ refreshKey = 0, highlightId = null }: Tick
       {state.kind === "ready" && state.tickets.length > 0 && (
         <ul className="mt-6 divide-y divide-white/5">
           {state.tickets.map((t) => (
-            <li
-              key={t.id}
-              className={`group -mx-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-3 py-4 transition ${
-                t.id === highlightId ? "motion-safe:animate-flash" : ""
-              }`}
-            >
-              <span className="w-14 shrink-0 text-sm text-mist tabular-nums">#{t.id}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-cream transition group-hover:text-signal-soft">
-                  {t.title}
-                </p>
-                <p className="mt-0.5 text-xs text-mist">
-                  {label(t.category)} · {timeAgo(t.createdAt)} ·{" "}
-                  {t.assigneeName ? `with ${t.assigneeName}` : "waiting for a technician"}
-                </p>
-              </div>
-              <span className={`eyebrow text-[10px] ${priorityStyle[t.priority]}`}>
-                {label(t.priority)}
-              </span>
-              <span
-                className={`eyebrow rounded-full border px-2.5 py-1 text-[10px] ${statusStyle[t.status]}`}
+            <li key={t.id}>
+              <Link
+                to={`/tickets/${t.id}`}
+                className={`group -mx-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-3 py-4 transition hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal/50 ${
+                  t.id === highlightId ? "motion-safe:animate-flash" : ""
+                }`}
               >
-                {label(t.status)}
-              </span>
+                <span className="w-14 shrink-0 text-sm text-mist tabular-nums">#{t.id}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-cream transition group-hover:text-signal-soft">
+                    {t.title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-mist">
+                    {label(t.category)} · {timeAgo(t.createdAt)} ·{" "}
+                    {t.assigneeName ? `with ${t.assigneeName}` : "waiting for a technician"}
+                  </p>
+                </div>
+                <PriorityLabel priority={t.priority} />
+                <StatusPill status={t.status} />
+                <span
+                  aria-hidden="true"
+                  className="text-mist transition group-hover:translate-x-1 group-hover:text-signal"
+                >
+                  →
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
