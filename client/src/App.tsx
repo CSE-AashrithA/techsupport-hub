@@ -12,7 +12,7 @@ export default function App() {
               className="size-2.5 rotate-45 bg-signal shadow-[0_0_14px] shadow-signal transition group-hover:rotate-[135deg]"
               aria-hidden="true"
             />
-            <span className="eyebrow text-sm text-cream">TechSupport Hub</span>
+            <span className="eyebrow text-sm whitespace-nowrap text-cream">TechSupport Hub</span>
           </Link>
           <ApiStatus />
         </div>
