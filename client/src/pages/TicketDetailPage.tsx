@@ -9,7 +9,7 @@ import {
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
 import { fullDate, PriorityLabel, StatusPill, timeAgo } from "../components/TicketBadges";
-import { label, type Comment, type TicketWithComments } from "../types";
+import { label, type Comment, type Status, type TicketWithComments } from "../types";
 
 type State =
   | { kind: "loading" }
@@ -130,6 +130,8 @@ function TicketView({
             Opened {timeAgo(ticket.createdAt)} by {ticket.requesterName}
           </span>
         </div>
+
+        <StatusTrack status={ticket.status} />
       </header>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -173,17 +175,12 @@ function TicketView({
           aria-label="Ticket info"
           className="h-fit rounded-2xl border border-white/10 bg-ink-800/60 p-6 backdrop-blur motion-safe:animate-rise [animation-delay:240ms]"
         >
-          <dl className="space-y-5">
-            <Info term="Status">
-              <StatusPill status={ticket.status} />
-            </Info>
-            <Info term="Priority">
-              <PriorityLabel priority={ticket.priority} />
-            </Info>
+          <h2 className="eyebrow text-mist">Ticket info</h2>
+          <dl className="mt-4 divide-y divide-white/5 text-sm">
             <Info term="Category">{label(ticket.category)}</Info>
             <Info term="Reported by">{ticket.requesterName}</Info>
             <Info term="Assigned to">
-              {ticket.assigneeName ?? <span className="text-mist">Not assigned yet</span>}
+              {ticket.assigneeName ?? <span className="text-signal-soft">Unassigned</span>}
             </Info>
             <Info term="Opened">{fullDate(ticket.createdAt)}</Info>
             <Info term="Last update">{timeAgo(ticket.updatedAt)}</Info>
@@ -209,7 +206,7 @@ function CommentItem({ comment }: { comment: Comment }) {
       <span
         aria-hidden="true"
         className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-semibold ${
-          isIt ? "bg-signal text-ink-950" : "bg-white/10 text-cream"
+          isIt ? "bg-signal-strong text-white" : "bg-white/10 text-cream"
         }`}
       >
         {initials}
@@ -232,10 +229,61 @@ function CommentItem({ comment }: { comment: Comment }) {
 
 function Info({ term, children }: { term: string; children: ReactNode }) {
   return (
-    <div>
-      <dt className="eyebrow text-[10px] text-mist">{term}</dt>
-      <dd className="mt-1.5 text-cream">{children}</dd>
+    <div className="flex items-baseline justify-between gap-4 py-3 first:pt-0 last:pb-0">
+      <dt className="text-mist">{term}</dt>
+      <dd className="text-right text-cream">{children}</dd>
     </div>
+  );
+}
+
+const STEPS: { key: Status; title: string }[] = [
+  { key: "open", title: "Reported" },
+  { key: "in_progress", title: "In progress" },
+  { key: "resolved", title: "Resolved" },
+];
+
+// where the ticket is in its life: reported -> in progress -> resolved
+function StatusTrack({ status }: { status: Status }) {
+  // a closed ticket counts as past the last step
+  const current = status === "closed" ? STEPS.length : STEPS.findIndex((s) => s.key === status);
+
+  return (
+    <ol aria-label="Ticket progress" className="mt-8 grid max-w-3xl grid-cols-3">
+      {STEPS.map((step, i) => {
+        const done = i < current;
+        const active = i === current;
+        return (
+          <li key={step.key} aria-current={active ? "step" : undefined} className="relative">
+            {/* line to the next step */}
+            {i < STEPS.length - 1 && (
+              <span
+                aria-hidden="true"
+                className={`absolute top-[7px] left-4 h-px w-[calc(100%-1rem)] ${
+                  done ? "bg-signal" : "bg-white/10"
+                }`}
+              />
+            )}
+            <span className="relative flex size-4 items-center justify-center">
+              {active && (
+                <span className="absolute inline-flex size-full rounded-full bg-signal/50 motion-safe:animate-ping" />
+              )}
+              <span
+                className={`relative size-3 rounded-full border-2 ${
+                  done
+                    ? "border-signal bg-signal"
+                    : active
+                      ? "border-signal bg-ink-900 shadow-[0_0_12px] shadow-signal"
+                      : "border-white/20 bg-ink-900"
+                }`}
+              />
+            </span>
+            <p className={`eyebrow mt-3 text-[10px] ${done || active ? "text-cream" : "text-mist/60"}`}>
+              {step.title}
+            </p>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -295,13 +343,13 @@ function ReplyBox({
         className="block w-full resize-y rounded-2xl border border-white/10 bg-ink-900/80 px-5 py-4 text-cream placeholder:text-mist/50 transition focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/30"
       />
       <div className="mt-3 flex items-center justify-between gap-4">
-        <p id="reply-error" className="text-sm text-signal-soft" role={error ? "alert" : undefined}>
+        <p id="reply-error" className="text-sm text-urgent" role={error ? "alert" : undefined}>
           {error ?? <span className="text-xs text-mist/60">⌘ + Enter to post</span>}
         </p>
         <button
           type="submit"
           disabled={posting}
-          className="shrink-0 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-[0_0_24px_-6px] shadow-signal transition hover:bg-signal-soft disabled:opacity-60"
+          className="shrink-0 rounded-full bg-signal-strong px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_-6px] shadow-signal transition hover:bg-signal disabled:opacity-60"
         >
           {posting ? "Posting…" : "Post update"}
         </button>

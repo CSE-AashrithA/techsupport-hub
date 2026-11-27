@@ -3,7 +3,7 @@ import { label, type Priority, type Status } from "../types";
 // shared by the queue and the ticket page so tickets look the same everywhere
 
 const priorityStyle: Record<Priority, string> = {
-  urgent: "text-signal",
+  urgent: "text-urgent",
   high: "text-amber-300",
   medium: "text-sky-300",
   low: "text-mist",
@@ -17,7 +17,15 @@ const statusStyle: Record<Status, string> = {
 };
 
 export function PriorityLabel({ priority }: { priority: Priority }) {
-  return <span className={`eyebrow text-[10px] ${priorityStyle[priority]}`}>{label(priority)}</span>;
+  return (
+    <span className={`eyebrow inline-flex items-center gap-1.5 text-[10px] ${priorityStyle[priority]}`}>
+      <span
+        aria-hidden="true"
+        className={`size-1.5 rounded-full bg-current ${priority === "urgent" ? "shadow-[0_0_8px] shadow-current" : ""}`}
+      />
+      {label(priority)}
+    </span>
+  );
 }
 
 export function StatusPill({ status }: { status: Status }) {

@@ -12,7 +12,7 @@ const emptyForm: NewTicket = { title: "", description: "", category: "hardware",
 const DESCRIPTION_LIMIT = 5000;
 
 const inputClass =
-  "mt-2 block w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-cream placeholder:text-mist/50 transition focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/30 aria-[invalid=true]:border-signal-soft";
+  "mt-2 block w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-cream placeholder:text-mist/50 transition focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/30 aria-[invalid=true]:border-urgent";
 
 // uses the browser's built-in <dialog>, which handles Esc, focus and the dark backdrop for us
 export default function ReportIssueDialog({ open, onClose, onCreated }: ReportIssueDialogProps) {
@@ -90,7 +90,7 @@ export default function ReportIssueDialog({ open, onClose, onCreated }: ReportIs
         </div>
 
         {formError && (
-          <p role="alert" className="mt-5 rounded-xl border border-signal/40 bg-signal/10 px-4 py-3 text-sm">
+          <p role="alert" className="mt-5 rounded-xl border border-urgent/40 bg-urgent/10 px-4 py-3 text-sm">
             {formError}
           </p>
         )}
@@ -158,7 +158,7 @@ export default function ReportIssueDialog({ open, onClose, onCreated }: ReportIs
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-full bg-signal px-6 py-3 text-sm font-semibold text-ink-950 shadow-[0_0_30px_-6px] shadow-signal transition hover:bg-signal-soft disabled:opacity-60"
+            className="rounded-full bg-signal-strong px-6 py-3 text-sm font-semibold text-white shadow-[0_0_30px_-6px] shadow-signal transition hover:bg-signal disabled:opacity-60"
           >
             {submitting ? "Sending…" : "Submit ticket"}
           </button>
@@ -186,7 +186,7 @@ function Field({
       </label>
       {children}
       {error && (
-        <p id={`${id}-error`} className="mt-1.5 text-sm text-signal-soft">
+        <p id={`${id}-error`} className="mt-1.5 text-sm text-urgent">
           {error}
         </p>
       )}
@@ -226,7 +226,7 @@ function ChipGroup<T extends string>({
             />
             <span
               className={`block rounded-full border border-white/10 px-4 py-2 text-sm text-mist transition hover:border-white/30 hover:text-cream peer-checked:border-signal peer-checked:bg-signal/15 peer-checked:text-cream peer-focus-visible:ring-2 peer-focus-visible:ring-signal/50 ${
-                option === "urgent" ? "peer-checked:shadow-[0_0_18px_-4px] peer-checked:shadow-signal" : ""
+                option === "urgent" ? "peer-checked:border-urgent peer-checked:bg-urgent/15 peer-checked:shadow-[0_0_18px_-4px] peer-checked:shadow-urgent" : ""
               }`}
             >
               {label(option)}
@@ -234,7 +234,7 @@ function ChipGroup<T extends string>({
           </label>
         ))}
       </div>
-      {error && <p className="mt-1.5 text-sm text-signal-soft">{error}</p>}
+      {error && <p className="mt-1.5 text-sm text-urgent">{error}</p>}
     </fieldset>
   );
 }

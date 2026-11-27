@@ -22,7 +22,7 @@ export default function HomePage() {
       <main className="mx-auto max-w-6xl px-6 pt-16 pb-24 sm:pt-24">
         <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <span className="eyebrow inline-block rounded-full bg-signal motion-safe:animate-rise px-3 py-1.5 text-ink-950">
+            <span className="eyebrow inline-block rounded-full bg-signal-strong motion-safe:animate-rise px-3 py-1.5 text-white">
               IT Support · Help desk
             </span>
 
@@ -40,7 +40,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setReportOpen(true)}
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-signal px-6 py-3 font-semibold text-ink-950 shadow-[0_0_30px_-6px] shadow-signal transition hover:bg-signal-soft motion-safe:animate-rise [animation-delay:220ms]"
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-signal-strong px-6 py-3 font-semibold text-white shadow-[0_0_30px_-6px] shadow-signal transition hover:bg-signal motion-safe:animate-rise [animation-delay:220ms]"
             >
               Report an issue <span aria-hidden="true">→</span>
             </button>

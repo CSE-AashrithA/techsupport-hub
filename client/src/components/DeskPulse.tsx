@@ -11,7 +11,7 @@ const resolvedPerDay = [4, 6, 5, 9, 8, 12, 14];
 const days = ["M", "T", "W", "T", "F", "S", "S"];
 
 const recent = [
-  { id: 1044, title: "Wi-Fi down in Lab B", status: "Urgent", color: "text-signal" },
+  { id: 1044, title: "Wi-Fi down in Lab B", status: "Urgent", color: "text-urgent" },
   { id: 1043, title: "New laptop setup", status: "In progress", color: "text-amber-300" },
 ];
 
@@ -64,7 +64,7 @@ function Stat({ label, value, decimals, suffix, accent }: (typeof stats)[number]
   return (
     <div>
       <p
-        className={`font-display text-3xl font-semibold tabular-nums ${accent ? "text-signal" : "text-cream"}`}
+        className={`font-display text-3xl font-semibold tabular-nums ${accent ? "text-urgent" : "text-cream"}`}
       >
         {current.toFixed(decimals)}
         {suffix}

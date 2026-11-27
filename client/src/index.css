@@ -13,9 +13,14 @@
   --color-cream: #ece8df;
   --color-mist: #9aa3b5;
 
-  /* the one accent color, used for main actions and urgent things */
-  --color-signal: #ff5a1f;
-  --color-signal-soft: #ff8a5b;
+  /* the accent color: highlights, glows, the status track */
+  --color-signal: #8b5cf6;
+  --color-signal-soft: #a78bfa;
+  /* a deeper purple for filled buttons, so white text on it stays easy to read */
+  --color-signal-strong: #7c3aed;
+
+  /* reserved for things that need attention: urgent tickets, errors, offline */
+  --color-urgent: #fb7185;
 
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter Tight Variable", ui-sans-serif, system-ui, sans-serif;
