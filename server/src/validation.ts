@@ -76,3 +76,12 @@ export function parseId(value: unknown): number | null {
   const id = Number(value);
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
+
+// an update or reply posted on a ticket
+export function validateNewComment(body: unknown): Validation<{ body: string }> {
+  const input = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+  const text = cleanText(input.body);
+  if (!text) return { ok: false, errors: { body: "Write something first" } };
+  if (text.length > 5000) return { ok: false, errors: { body: "Keep it under 5000 characters" } };
+  return { ok: true, value: { body: text } };
+}

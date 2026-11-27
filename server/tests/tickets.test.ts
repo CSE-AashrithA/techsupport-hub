@@ -174,3 +174,58 @@ describe("GET /api/tickets/:id", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("POST /api/tickets/:id/comments", () => {
+  it("adds an update and sends it back with the author", async () => {
+    const ticket = await request(app).post("/api/tickets").send(goodTicket);
+
+    const res = await request(app)
+      .post(`/api/tickets/${ticket.body.id}/comments`)
+      .send({ body: "  Restarted the router, still dropping.  " });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({
+      body: "Restarted the router, still dropping.",
+      authorName: "Demo Employee",
+      authorRole: "employee",
+    });
+  });
+
+  it("shows the update when viewing the ticket", async () => {
+    const ticket = await request(app).post("/api/tickets").send(goodTicket);
+    await request(app).post(`/api/tickets/${ticket.body.id}/comments`).send({ body: "any news?" });
+
+    const res = await request(app).get(`/api/tickets/${ticket.body.id}`);
+
+    expect(res.body.comments.map((c: { body: string }) => c.body)).toEqual(["any news?"]);
+  });
+
+  it("moves the ticket's last update time forward", async () => {
+    const ticket = await request(app).post("/api/tickets").send(goodTicket);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    await request(app).post(`/api/tickets/${ticket.body.id}/comments`).send({ body: "update" });
+    const res = await request(app).get(`/api/tickets/${ticket.body.id}`);
+
+    expect(new Date(res.body.updatedAt).getTime()).toBeGreaterThan(
+      new Date(ticket.body.updatedAt).getTime(),
+    );
+  });
+
+  it("rejects an empty update", async () => {
+    const ticket = await request(app).post("/api/tickets").send(goodTicket);
+
+    const res = await request(app)
+      .post(`/api/tickets/${ticket.body.id}/comments`)
+      .send({ body: "   " });
+
+    expect(res.status).toBe(400);
+    expect(res.body.fields.body).toBeDefined();
+  });
+
+  it("returns 404 for a ticket that doesn't exist", async () => {
+    const res = await request(app).post("/api/tickets/999999/comments").send({ body: "hello?" });
+
+    expect(res.status).toBe(404);
+  });
+});
