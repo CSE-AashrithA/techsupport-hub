@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
 import { fullDate, PriorityLabel, StatusPill, timeAgo } from "../components/TicketBadges";
@@ -34,6 +41,22 @@ export default function TicketDetailPage() {
   }, [id]);
 
   useEffect(load, [load]);
+
+  // show a new update right away, without reloading the whole ticket
+  function handleCommentAdded(comment: Comment) {
+    setState((current) =>
+      current.kind === "ready"
+        ? {
+            kind: "ready",
+            ticket: {
+              ...current.ticket,
+              comments: [...current.ticket.comments, comment],
+              updatedAt: comment.createdAt,
+            },
+          }
+        : current,
+    );
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 pt-10 pb-24">
@@ -77,12 +100,20 @@ export default function TicketDetailPage() {
         </div>
       )}
 
-      {state.kind === "ready" && <TicketView ticket={state.ticket} />}
+      {state.kind === "ready" && (
+        <TicketView ticket={state.ticket} onCommentAdded={handleCommentAdded} />
+      )}
     </main>
   );
 }
 
-function TicketView({ ticket }: { ticket: TicketWithComments }) {
+function TicketView({
+  ticket,
+  onCommentAdded,
+}: {
+  ticket: TicketWithComments;
+  onCommentAdded: (comment: Comment) => void;
+}) {
   return (
     <>
       <header className="mt-8 motion-safe:animate-rise">
@@ -133,6 +164,8 @@ function TicketView({ ticket }: { ticket: TicketWithComments }) {
                 ))}
               </ol>
             )}
+
+            <ReplyBox ticketId={ticket.id} onAdded={onCommentAdded} />
           </section>
         </div>
 
@@ -172,7 +205,7 @@ function CommentItem({ comment }: { comment: Comment }) {
     .toUpperCase();
 
   return (
-    <li className="flex gap-4 rounded-2xl border border-white/10 bg-ink-800/40 p-5">
+    <li className="flex gap-4 rounded-2xl border border-white/10 bg-ink-800/40 p-5 motion-safe:animate-rise">
       <span
         aria-hidden="true"
         className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-semibold ${
@@ -203,5 +236,76 @@ function Info({ term, children }: { term: string; children: ReactNode }) {
       <dt className="eyebrow text-[10px] text-mist">{term}</dt>
       <dd className="mt-1.5 text-cream">{children}</dd>
     </div>
+  );
+}
+
+function ReplyBox({
+  ticketId,
+  onAdded,
+}: {
+  ticketId: number;
+  onAdded: (comment: Comment) => void;
+}) {
+  const [body, setBody] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [posting, setPosting] = useState(false);
+
+  async function post(event?: FormEvent) {
+    event?.preventDefault();
+    if (!body.trim()) {
+      setError("Write something first");
+      return;
+    }
+    setPosting(true);
+    setError(null);
+    try {
+      const comment = await api.addComment(ticketId, body);
+      setBody("");
+      onAdded(comment);
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.fields.body ?? err.message) : (err as Error).message);
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  // cmd+enter (mac) or ctrl+enter posts, like most chat apps
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) post();
+  }
+
+  return (
+    <form onSubmit={post} className="mt-4">
+      <label htmlFor="reply" className="sr-only">
+        Add an update
+      </label>
+      <textarea
+        id="reply"
+        rows={3}
+        maxLength={5000}
+        value={body}
+        onChange={(e) => {
+          setBody(e.target.value);
+          if (error) setError(null);
+        }}
+        onKeyDown={handleKeyDown}
+        placeholder="Add an update or more details…"
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? "reply-error" : undefined}
+        className="block w-full resize-y rounded-2xl border border-white/10 bg-ink-900/80 px-5 py-4 text-cream placeholder:text-mist/50 transition focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/30"
+      />
+      <div className="mt-3 flex items-center justify-between gap-4">
+        <p id="reply-error" className="text-sm text-signal-soft" role={error ? "alert" : undefined}>
+          {error ?? <span className="text-xs text-mist/60">⌘ + Enter to post</span>}
+        </p>
+        <button
+          type="submit"
+          disabled={posting}
+          className="shrink-0 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-[0_0_24px_-6px] shadow-signal transition hover:bg-signal-soft disabled:opacity-60"
+        >
+          {posting ? "Posting…" : "Post update"}
+        </button>
+      </div>
+    </form>
   );
 }

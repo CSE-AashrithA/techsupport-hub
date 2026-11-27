@@ -1,4 +1,11 @@
-import type { NewTicket, Priority, Status, Ticket, TicketWithComments } from "./types";
+import type {
+  Comment,
+  NewTicket,
+  Priority,
+  Status,
+  Ticket,
+  TicketWithComments,
+} from "./types";
 
 // empty while developing (vite forwards /api to the server). set VITE_API_URL when deployed.
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
@@ -26,6 +33,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
+    // a 5xx with no json usually means the dev proxy couldn't reach the api at all
+    if (!data && res.status >= 500) {
+      throw new ApiError("Can't reach the IT desk right now. Is the server running?", res.status);
+    }
     throw new ApiError(data?.error ?? `Request failed (${res.status})`, res.status, data?.fields);
   }
   return res.json() as Promise<T>;
@@ -46,5 +57,12 @@ export const api = {
 
   createTicket(ticket: NewTicket) {
     return request<Ticket>("/tickets", { method: "POST", body: JSON.stringify(ticket) });
+  },
+
+  addComment(ticketId: number, body: string) {
+    return request<Comment>(`/tickets/${ticketId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    });
   },
 };
