@@ -5,6 +5,7 @@ import {
   parseTicketFilters,
   validateNewComment,
   validateNewTicket,
+  validateStatusChange,
 } from "../validation.js";
 
 export const ticketsRouter = Router();
@@ -150,4 +151,45 @@ ticketsRouter.post("/:id/comments", async (req, res) => {
     return;
   }
   res.status(201).json(rows[0]);
+});
+
+// PATCH /api/tickets/:id  { status }
+ticketsRouter.patch("/:id", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) {
+    res.status(400).json({ error: "Ticket id must be a positive number" });
+    return;
+  }
+
+  const result = validateStatusChange(req.body);
+  if (!result.ok) {
+    res.status(400).json({ error: "Some fields need fixing", fields: result.errors });
+    return;
+  }
+
+  // resolved_at is set the first time a ticket is resolved or closed, and cleared if it's
+  // reopened (the database insists those two always agree). updated_at moves on its own.
+  const { rows } = await pool.query(
+    `with changed as (
+       update tickets set
+         status = $2,
+         resolved_at = case
+           when $2 in ('resolved', 'closed') then coalesce(resolved_at, now())
+           else null
+         end
+       where id = $1
+       returning *
+     )
+     select ${TICKET_FIELDS}
+     from changed t
+     join users r on r.id = t.requester_id
+     left join users a on a.id = t.assignee_id`,
+    [id, result.value.status],
+  );
+
+  if (rows.length === 0) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+  res.json(rows[0]);
 });

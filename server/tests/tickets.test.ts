@@ -229,3 +229,61 @@ describe("POST /api/tickets/:id/comments", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("PATCH /api/tickets/:id", () => {
+  async function newTicket() {
+    const res = await request(app).post("/api/tickets").send(goodTicket);
+    return res.body.id as number;
+  }
+
+  it("moves a ticket to in progress", async () => {
+    const id = await newTicket();
+
+    const res = await request(app).patch(`/api/tickets/${id}`).send({ status: "in_progress" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id, status: "in_progress", resolvedAt: null });
+  });
+
+  it("records when a ticket is resolved", async () => {
+    const id = await newTicket();
+
+    const res = await request(app).patch(`/api/tickets/${id}`).send({ status: "resolved" });
+
+    expect(res.body.status).toBe("resolved");
+    expect(res.body.resolvedAt).not.toBeNull();
+  });
+
+  it("keeps the first resolved time when a resolved ticket is closed", async () => {
+    const id = await newTicket();
+    const resolved = await request(app).patch(`/api/tickets/${id}`).send({ status: "resolved" });
+
+    const closed = await request(app).patch(`/api/tickets/${id}`).send({ status: "closed" });
+
+    expect(closed.body.resolvedAt).toBe(resolved.body.resolvedAt);
+  });
+
+  it("clears the resolved time when a ticket is reopened", async () => {
+    const id = await newTicket();
+    await request(app).patch(`/api/tickets/${id}`).send({ status: "resolved" });
+
+    const res = await request(app).patch(`/api/tickets/${id}`).send({ status: "open" });
+
+    expect(res.body).toMatchObject({ status: "open", resolvedAt: null });
+  });
+
+  it("rejects a status that doesn't exist", async () => {
+    const id = await newTicket();
+
+    const res = await request(app).patch(`/api/tickets/${id}`).send({ status: "done-ish" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.fields.status).toBeDefined();
+  });
+
+  it("returns 404 for a ticket that doesn't exist", async () => {
+    const res = await request(app).patch("/api/tickets/999999").send({ status: "resolved" });
+
+    expect(res.status).toBe(404);
+  });
+});
