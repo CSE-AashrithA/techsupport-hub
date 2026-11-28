@@ -9,7 +9,7 @@ import {
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
 import { fullDate, PriorityLabel, StatusPill, timeAgo } from "../components/TicketBadges";
-import { label, type Comment, type Status, type TicketWithComments } from "../types";
+import { label, type Comment, type Status, type Ticket, type TicketWithComments } from "../types";
 
 type State =
   | { kind: "loading" }
@@ -41,6 +41,15 @@ export default function TicketDetailPage() {
   }, [id]);
 
   useEffect(load, [load]);
+
+  // swap in the ticket's new status/times but keep the comments we already have
+  function handleTicketChanged(updated: Ticket) {
+    setState((current) =>
+      current.kind === "ready"
+        ? { kind: "ready", ticket: { ...current.ticket, ...updated } }
+        : current,
+    );
+  }
 
   // show a new update right away, without reloading the whole ticket
   function handleCommentAdded(comment: Comment) {
@@ -101,7 +110,11 @@ export default function TicketDetailPage() {
       )}
 
       {state.kind === "ready" && (
-        <TicketView ticket={state.ticket} onCommentAdded={handleCommentAdded} />
+        <TicketView
+          ticket={state.ticket}
+          onCommentAdded={handleCommentAdded}
+          onTicketChanged={handleTicketChanged}
+        />
       )}
     </main>
   );
@@ -110,9 +123,11 @@ export default function TicketDetailPage() {
 function TicketView({
   ticket,
   onCommentAdded,
+  onTicketChanged,
 }: {
   ticket: TicketWithComments;
   onCommentAdded: (comment: Comment) => void;
+  onTicketChanged: (ticket: Ticket) => void;
 }) {
   return (
     <>
@@ -132,6 +147,7 @@ function TicketView({
         </div>
 
         <StatusTrack status={ticket.status} />
+        <StatusActions ticket={ticket} onChanged={onTicketChanged} />
       </header>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -258,7 +274,7 @@ function StatusTrack({ status }: { status: Status }) {
             {i < STEPS.length - 1 && (
               <span
                 aria-hidden="true"
-                className={`absolute top-[7px] left-4 h-px w-[calc(100%-1rem)] ${
+                className={`absolute top-[7px] left-4 h-px w-[calc(100%-1rem)] transition-colors duration-700 ${
                   done ? "bg-signal" : "bg-white/10"
                 }`}
               />
@@ -268,7 +284,7 @@ function StatusTrack({ status }: { status: Status }) {
                 <span className="absolute inline-flex size-full rounded-full bg-signal/50 motion-safe:animate-ping" />
               )}
               <span
-                className={`relative size-3 rounded-full border-2 ${
+                className={`relative size-3 rounded-full border-2 transition-all duration-500 ${
                   done
                     ? "border-signal bg-signal"
                     : active
@@ -355,5 +371,83 @@ function ReplyBox({
         </button>
       </div>
     </form>
+  );
+}
+
+// what you can do next from each status. the first action is the main one.
+// (later, once login exists, only the IT team will see these)
+const NEXT_STEPS: Record<Status, { to: Status; text: string }[]> = {
+  open: [
+    { to: "in_progress", text: "Start working on it" },
+    { to: "resolved", text: "Mark resolved" },
+  ],
+  in_progress: [
+    { to: "resolved", text: "Mark resolved" },
+    { to: "open", text: "Move back to open" },
+  ],
+  resolved: [
+    { to: "closed", text: "Close ticket" },
+    { to: "open", text: "Reopen" },
+  ],
+  closed: [{ to: "open", text: "Reopen" }],
+};
+
+function StatusActions({
+  ticket,
+  onChanged,
+}: {
+  ticket: Ticket;
+  onChanged: (ticket: Ticket) => void;
+}) {
+  const [saving, setSaving] = useState<Status | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [primary, ...others] = NEXT_STEPS[ticket.status];
+  // a closed ticket's only option (reopen) shouldn't look like the main call to action
+  const showPrimary = ticket.status !== "closed";
+
+  async function change(to: Status) {
+    setSaving(to);
+    setError(null);
+    try {
+      onChanged(await api.updateStatus(ticket.id, to));
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  return (
+    <div className="mt-8 flex flex-wrap items-center gap-3">
+      {showPrimary && (
+        <button
+          type="button"
+          onClick={() => change(primary.to)}
+          disabled={saving !== null}
+          className="rounded-full bg-signal-strong px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_-6px] shadow-signal transition hover:bg-signal disabled:opacity-60"
+        >
+          {saving === primary.to ? "Saving…" : primary.text}
+        </button>
+      )}
+      {(showPrimary ? others : [primary]).map((step) => (
+        <button
+          key={step.to}
+          type="button"
+          onClick={() => change(step.to)}
+          disabled={saving !== null}
+          className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-cream transition hover:border-signal hover:text-signal-soft disabled:opacity-60"
+        >
+          {saving === step.to ? "Saving…" : step.text}
+        </button>
+      ))}
+      {ticket.status === "closed" && (
+        <span className="text-sm text-mist">This ticket is closed.</span>
+      )}
+      {error && (
+        <p role="alert" className="w-full text-sm text-urgent">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

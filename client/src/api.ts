@@ -59,6 +59,13 @@ export const api = {
     return request<Ticket>("/tickets", { method: "POST", body: JSON.stringify(ticket) });
   },
 
+  updateStatus(ticketId: number, status: Status) {
+    return request<Ticket>(`/tickets/${ticketId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+  },
+
   addComment(ticketId: number, body: string) {
     return request<Comment>(`/tickets/${ticketId}/comments`, {
       method: "POST",
